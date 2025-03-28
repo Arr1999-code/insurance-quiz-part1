@@ -696,7 +696,7 @@ export default function QuizApp() {
               <button
                 key={i}
                 onClick={() => handleSelect(option)}
-                disabled={selectedAnswer !== null}
+                disabled={selectedAnswers[currentQuestion] !== null}
                 className={`w-full text-left px-4 py-2 rounded border ${
                   selectedAnswer === option
                     ? option === quizData[currentQuestion].answer
