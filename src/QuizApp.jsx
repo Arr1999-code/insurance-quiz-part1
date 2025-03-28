@@ -619,7 +619,7 @@ const QuizApp = () => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [finished, setFinished] = useState(false);
 
-  const PASSWORD = "SwagRich"; // Change this password anytime
+  const PASSWORD = "insur101"; // Change this password anytime
 
   const currentQuestion = shuffled[current];
 
