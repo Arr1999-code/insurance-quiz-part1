@@ -609,7 +609,9 @@ export default function QuizApp() {
   const [authenticated, setAuthenticated] = useState(false);
   const [inputPassword, setInputPassword] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState(Array(quizData.length).fill(null));
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [correctAnswer, setCorrectAnswer] = useState(null);
   const [score, setScore] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
 
@@ -622,18 +624,25 @@ export default function QuizApp() {
   };
 
   const handleSelect = (option) => {
-    if (selectedAnswers[currentQuestion]) return;
-    const newAnswers = [...selectedAnswers];
-    newAnswers[currentQuestion] = option;
-    setSelectedAnswers(newAnswers);
-    if (option === quizData[currentQuestion].answer) {
+    if (selectedAnswer !== null) return;
+    setSelectedAnswer(option);
+    const correct = quizData[currentQuestion].answer;
+    if (option === correct) {
+      setFeedback("Correct!");
+      setCorrectAnswer(null);
       setScore((prev) => prev + 1);
+    } else {
+      setFeedback("Incorrect.");
+      setCorrectAnswer(correct);
     }
   };
 
   const handleNext = () => {
     if (currentQuestion < quizData.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer(null);
+      setFeedback(null);
+      setCorrectAnswer(null);
     } else {
       setShowSummary(true);
     }
@@ -642,6 +651,9 @@ export default function QuizApp() {
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
+      setSelectedAnswer(null);
+      setFeedback(null);
+      setCorrectAnswer(null);
     }
   };
 
@@ -683,23 +695,22 @@ export default function QuizApp() {
           <div className="space-y-2">
             {quizData[currentQuestion].options.map((option, i) => {
               const letter = String.fromCharCode(65 + i);
-              const selected = selectedAnswers[currentQuestion];
               const isCorrect = option === quizData[currentQuestion].answer;
-              const isSelected = selected === option;
-              const showCorrect = selected && isCorrect;
-              const showIncorrect = selected && isSelected && !isCorrect;
+              const isSelected = selectedAnswer === option;
+              const showCorrect = selectedAnswer !== null && isCorrect;
+              const showIncorrect = selectedAnswer !== null && isSelected && !isCorrect;
 
               return (
                 <button
                   key={i}
                   onClick={() => handleSelect(option)}
-                  disabled={!!selected}
+                  disabled={selectedAnswer !== null}
                   className={`w-full text-left px-4 py-2 rounded border flex items-center gap-2 ${
                     isSelected
                       ? isCorrect
                         ? "bg-green-100 border-green-500"
                         : "bg-red-100 border-red-500"
-                      : isCorrect && selected
+                      : showCorrect
                       ? "bg-green-50 border-green-400"
                       : "bg-white hover:bg-gray-100 border-gray-300"
                   }`}
@@ -712,12 +723,16 @@ export default function QuizApp() {
             })}
           </div>
 
-          {selectedAnswers[currentQuestion] &&
-            selectedAnswers[currentQuestion] !== quizData[currentQuestion].answer && (
-              <p className="mt-4 text-green-600 font-semibold">
-                Correct Answer: {quizData[currentQuestion].answer}
-              </p>
-            )}
+          {feedback && (
+            <p className={`mt-4 font-medium ${feedback === "Correct!" ? "text-green-600" : "text-red-600"}`}>
+              {feedback}
+            </p>
+          )}
+          {correctAnswer && (
+            <p className="mt-2 text-green-600 font-medium">
+              Correct answer: {correctAnswer}
+            </p>
+          )}
 
           <div className="flex justify-between mt-6">
             {currentQuestion > 0 && (
@@ -728,7 +743,7 @@ export default function QuizApp() {
                 Previous
               </button>
             )}
-            {selectedAnswers[currentQuestion] && (
+            {selectedAnswer && (
               <button
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 onClick={handleNext}
@@ -742,5 +757,6 @@ export default function QuizApp() {
     </div>
   );
 }
+
 
 
