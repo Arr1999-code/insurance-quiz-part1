@@ -1,8 +1,6 @@
-import React from 'react';
-import QuizApp from './QuizApp';
+import React from "react";
+import QuizApp from "./QuizApp";
 
-function App() {
+export default function App() {
   return <QuizApp />;
 }
-
-export default App;
