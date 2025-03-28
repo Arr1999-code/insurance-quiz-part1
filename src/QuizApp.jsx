@@ -2061,7 +2061,8 @@ const originalQuizData = [
   
 ];
 
-const quizData = [...originalQuizData].sort(() => Math.random() - 0.5);
+const quizData = [...(Array.isArray(originalQuizData) ? originalQuizData : [])].sort(() => Math.random() - 0.5);
+
 
 export default function QuizApp() {
   const [authenticated, setAuthenticated] = useState(false);
