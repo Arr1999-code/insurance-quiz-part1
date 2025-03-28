@@ -609,11 +609,20 @@ export default function QuizApp() {
   const [authenticated, setAuthenticated] = useState(false);
   const [inputPassword, setInputPassword] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [feedback, setFeedback] = useState(null);
-  const [correctAnswer, setCorrectAnswer] = useState(null);
+  const [selectedAnswers, setSelectedAnswers] = useState(Array(quizData.length).fill(null));
   const [score, setScore] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
+
+  const selectedAnswer = selectedAnswers[currentQuestion];
+  const feedback = selectedAnswer
+    ? selectedAnswer === quizData[currentQuestion].answer
+      ? "Correct!"
+      : "Incorrect."
+    : null;
+  const correctAnswer =
+    selectedAnswer !== null && selectedAnswer !== quizData[currentQuestion].answer
+      ? quizData[currentQuestion].answer
+      : null;
 
   const handleLogin = () => {
     if (inputPassword === PASSWORD) {
@@ -624,25 +633,18 @@ export default function QuizApp() {
   };
 
   const handleSelect = (option) => {
-    if (selectedAnswer !== null) return;
-    setSelectedAnswer(option);
-    const correct = quizData[currentQuestion].answer;
-    if (option === correct) {
-      setFeedback("Correct!");
-      setCorrectAnswer(null);
+    if (selectedAnswers[currentQuestion] !== null) return;
+    const newAnswers = [...selectedAnswers];
+    newAnswers[currentQuestion] = option;
+    setSelectedAnswers(newAnswers);
+    if (option === quizData[currentQuestion].answer) {
       setScore((prev) => prev + 1);
-    } else {
-      setFeedback("Incorrect.");
-      setCorrectAnswer(correct);
     }
   };
 
   const handleNext = () => {
     if (currentQuestion < quizData.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setSelectedAnswer(null);
-      setFeedback(null);
-      setCorrectAnswer(null);
     } else {
       setShowSummary(true);
     }
@@ -651,9 +653,6 @@ export default function QuizApp() {
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      setSelectedAnswer(null);
-      setFeedback(null);
-      setCorrectAnswer(null);
     }
   };
 
@@ -693,34 +692,28 @@ export default function QuizApp() {
           <p className="font-semibold mb-4">Question {currentQuestion + 1} of {quizData.length}</p>
           <p className="text-xl mb-6">{quizData[currentQuestion].question}</p>
           <div className="space-y-2">
-            {quizData[currentQuestion].options.map((option, i) => {
-              const letter = String.fromCharCode(65 + i);
-              const isCorrect = option === quizData[currentQuestion].answer;
-              const isSelected = selectedAnswer === option;
-              const showCorrect = selectedAnswer !== null && isCorrect;
-              const showIncorrect = selectedAnswer !== null && isSelected && !isCorrect;
-
-              return (
-                <button
-                  key={i}
-                  onClick={() => handleSelect(option)}
-                  disabled={selectedAnswer !== null}
-                  className={`w-full text-left px-4 py-2 rounded border flex items-center gap-2 ${
-                    isSelected
-                      ? isCorrect
-                        ? "bg-green-100 border-green-500"
-                        : "bg-red-100 border-red-500"
-                      : showCorrect
-                      ? "bg-green-50 border-green-400"
-                      : "bg-white hover:bg-gray-100 border-gray-300"
-                  }`}
-                >
-                  {showCorrect && <span className="text-green-500">✅</span>}
-                  {showIncorrect && <span className="text-red-500">❌</span>}
-                  <span className="font-semibold">{letter}.</span> {option}
-                </button>
-              );
-            })}
+            {quizData[currentQuestion].options.map((option, i) => (
+              <button
+                key={i}
+                onClick={() => handleSelect(option)}
+                disabled={selectedAnswer !== null}
+                className={`w-full text-left px-4 py-2 rounded border ${
+                  selectedAnswer === option
+                    ? option === quizData[currentQuestion].answer
+                      ? "bg-green-100 border-green-500"
+                      : "bg-red-100 border-red-500"
+                    : "bg-white hover:bg-gray-100 border-gray-300"
+                }`}
+              >
+                {selectedAnswer !== null && quizData[currentQuestion].answer === option && (
+                  <span className="text-green-500 mr-2">✅</span>
+                )}
+                {selectedAnswer !== null && selectedAnswer === option && selectedAnswer !== quizData[currentQuestion].answer && (
+                  <span className="text-red-500 mr-2">❌</span>
+                )}
+                {String.fromCharCode(65 + i)}. {option}
+              </button>
+            ))}
           </div>
 
           {feedback && (
@@ -757,6 +750,3 @@ export default function QuizApp() {
     </div>
   );
 }
-
-
-
