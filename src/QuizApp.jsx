@@ -1,14 +1,8 @@
-import React, { useState } from 'react';
-const Button = ({ onClick, children, className = '' }) => (
-  <button
-    onClick={onClick}
-    className={`bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition ${className}`}
-  >
-    {children}
-  </button>
-);
+import React, { useState } from "react";
 
-const questions = [
+const PASSWORD = "insur101";
+
+const originalQuizData = [
   {
     question: "A policyowner suffers an injury that renders him incapable of performing one or more important job duties. Any decrease in income resulting from this injury would make him eligible for benefits under which provision?",
     options: [
@@ -609,19 +603,15 @@ const questions = [
   
 ];
 
-const QuizApp = () => {
-  const shuffled = React.useMemo(() => [...questions].sort(() => Math.random() - 0.5), []);
+const quizData = [...originalQuizData].sort(() => Math.random() - 0.5);
+
+export default function QuizApp() {
   const [authenticated, setAuthenticated] = useState(false);
-  const [inputPassword, setInputPassword] = useState('');
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState(null);
+  const [inputPassword, setInputPassword] = useState("");
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState(Array(quizData.length).fill(null));
   const [score, setScore] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [finished, setFinished] = useState(false);
-
-  const PASSWORD = "insur101";
-
-  const currentQuestion = shuffled[current];
+  const [showSummary, setShowSummary] = useState(false);
 
   const handleLogin = () => {
     if (inputPassword === PASSWORD) {
@@ -631,91 +621,126 @@ const QuizApp = () => {
     }
   };
 
+  const handleSelect = (option) => {
+    if (selectedAnswers[currentQuestion]) return;
+    const newAnswers = [...selectedAnswers];
+    newAnswers[currentQuestion] = option;
+    setSelectedAnswers(newAnswers);
+    if (option === quizData[currentQuestion].answer) {
+      setScore((prev) => prev + 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentQuestion < quizData.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      setShowSummary(true);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="p-6 max-w-md w-full text-center">
-          <h2 className="text-xl font-bold mb-4">Enter Quiz Password</h2>
-          <input
-            type="password"
-            value={inputPassword}
-            onChange={(e) => setInputPassword(e.target.value)}
-            className="border border-gray-300 p-2 rounded w-full mb-4"
-            placeholder="Enter password"
-          />
-          <Button onClick={handleLogin}>Enter</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const handleSelect = (option) => {
-    if (showAnswer) return;
-    setSelected(option);
-    setShowAnswer(true);
-    if (option === currentQuestion.answer) {
-      setScore(score + 1);
-    }
-  };
-
-  const nextQuestion = () => {
-    setSelected(null);
-    setShowAnswer(false);
-    if (current + 1 < shuffled.length) {
-      setCurrent(current + 1);
-    } else {
-      setFinished(true);
-    }
-  };
-
-  if (finished) {
-    const percentage = ((score / shuffled.length) * 100).toFixed(0);
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="p-4 text-center">
-          <h2 className="text-2xl font-bold mb-4">Quiz Completed!</h2>
-          <p className="text-xl">Your Score: {score} / {questions.length} ({percentage}%)</p>
-        </div>
+      <div className="p-6 max-w-md mx-auto text-center">
+        <h2 className="text-xl font-bold mb-4">Enter Quiz Password</h2>
+        <input
+          type="password"
+          value={inputPassword}
+          onChange={(e) => setInputPassword(e.target.value)}
+          className="border border-gray-300 p-2 rounded w-full mb-4"
+          placeholder="Enter password"
+        />
+        <button
+          onClick={handleLogin}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+        >
+          Enter
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="p-6 max-w-xl w-full">
-        <h2 className="text-lg font-semibold mb-4">Question {current + 1} of {shuffled.length}</h2>
-        <p className="text-xl mb-6">{currentQuestion.question}</p>
-        <ul className="space-y-3">
-        {currentQuestion.options.map((option, index) => {
-  const isCorrect = option === currentQuestion.answer;
-  const isSelected = option === selected;
-  const showCorrect = showAnswer && isCorrect;
-  const showWrong = showAnswer && isSelected && !isCorrect;
+    <div className="p-6 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4 text-center">Insurance Exam Quiz</h1>
 
-  return (
-    <li
-      key={index}
-      className={`flex items-center gap-3 p-2 rounded border ${showCorrect ? 'border-green-500 bg-green-100' : showWrong ? 'border-red-500 bg-red-100' : 'border-gray-300'} cursor-pointer`}
-      onClick={() => handleSelect(option)}
-    >
-      {showCorrect && <span className="text-green-500">✅</span>}
-      {showWrong && <span className="text-red-500">❌</span>}
-      <span className="font-semibold">{String.fromCharCode(65 + index)}.</span>
-      <span>{option}</span>
-    </li>
+      {showSummary ? (
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h2 className="text-xl font-semibold mb-2">Quiz Complete!</h2>
+          <p className="mb-2">You got {score} out of {quizData.length} correct.</p>
+          <p className="text-lg font-bold">Score: {Math.round((score / quizData.length) * 100)}%</p>
+        </div>
+      ) : (
+        <div className="bg-white p-6 rounded-xl shadow-md mb-4">
+          <p className="font-semibold mb-4">Question {currentQuestion + 1} of {quizData.length}</p>
+          <p className="text-xl mb-6">{quizData[currentQuestion].question}</p>
+          <div className="space-y-2">
+            {quizData[currentQuestion].options.map((option, i) => {
+              const letter = String.fromCharCode(65 + i);
+              const selected = selectedAnswers[currentQuestion];
+              const isCorrect = option === quizData[currentQuestion].answer;
+              const isSelected = selected === option;
+              const showCorrect = selected && isCorrect;
+              const showIncorrect = selected && isSelected && !isCorrect;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleSelect(option)}
+                  disabled={!!selected}
+                  className={`w-full text-left px-4 py-2 rounded border flex items-center gap-2 ${
+                    isSelected
+                      ? isCorrect
+                        ? "bg-green-100 border-green-500"
+                        : "bg-red-100 border-red-500"
+                      : isCorrect && selected
+                      ? "bg-green-50 border-green-400"
+                      : "bg-white hover:bg-gray-100 border-gray-300"
+                  }`}
+                >
+                  {showCorrect && <span className="text-green-500">✅</span>}
+                  {showIncorrect && <span className="text-red-500">❌</span>}
+                  <span className="font-semibold">{letter}.</span> {option}
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedAnswers[currentQuestion] &&
+            selectedAnswers[currentQuestion] !== quizData[currentQuestion].answer && (
+              <p className="mt-4 text-green-600 font-semibold">
+                Correct Answer: {quizData[currentQuestion].answer}
+              </p>
+            )}
+
+          <div className="flex justify-between mt-6">
+            {currentQuestion > 0 && (
+              <button
+                onClick={handlePrevious}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              >
+                Previous
+              </button>
+            )}
+            {selectedAnswers[currentQuestion] && (
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={handleNext}
+              >
+                {currentQuestion < quizData.length - 1 ? "Next Question" : "Finish Quiz"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
-})}
-</ul>
-{showAnswer && (
-  <Button className="mt-6" onClick={nextQuestion}>
-    {current + 1 === questions.length ? 'Finish Quiz' : 'Next Question'}
-  </Button>
-)}
-</div>
-</div>
-);
-};
-
-export default QuizApp;
+}
 
 
